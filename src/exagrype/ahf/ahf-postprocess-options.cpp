@@ -6,6 +6,7 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <utility>
 
 namespace exahype2::ccz4::ahf {
 
@@ -93,6 +94,19 @@ ReferencePoint parseCentre(const std::string& option, const std::string& text) {
           parseNumber(option, parts[2])};
 }
 
+PostprocessPuncture parsePuncture(const std::string& option,
+                                  const std::string& text) {
+  const std::size_t colon = text.find(':');
+  if (colon == std::string::npos
+      || text.find(':', colon + 1) != std::string::npos
+      || splitAtCommas(text.substr(0, colon)).size() != 3) {
+    throw std::invalid_argument(
+      option + " expects x,y,z:m, not '" + text + "'");
+  }
+  return {.position = parseCentre(option, text.substr(0, colon)),
+          .mass = parsePositiveNumber(option, text.substr(colon + 1))};
+}
+
 /** The smallest gap between distinct values of @p values, sorted in place. */
 double smallestGap(std::vector<double>& values) {
   std::sort(values.begin(), values.end());
@@ -117,8 +131,12 @@ double smallestGap(std::vector<double>& values) {
 PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arguments) {
   PostprocessOptions options;
   const std::vector<std::string> optionsWithValue{
-    "--input", "--output", "--mapping", "--centre", "--center", "--radius", "--lmax",
-    "--support-radius", "--tolerance"};
+    "--input", "--output", "--mapping", "--centre", "--center", "--radius",
+    "--puncture", "--radius-per-mass", "--lmax", "--support-radius",
+    "--tolerance"};
+  bool centreGiven = false;
+  bool radiiPerMassGiven = false;
+  bool lMaxGiven = false;
   for (std::size_t i = 0; i < arguments.size(); ++i) {
     const std::string& argument = arguments[i];
     if (argument == "--help" || argument == "-h") {
@@ -141,12 +159,24 @@ PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arg
       options.mapping = parseMapping(value);
     } else if (argument == "--centre" || argument == "--center") {
       options.centre = parseCentre(argument, value);
+      centreGiven = true;
     } else if (argument == "--radius") {
       for (const std::string& radius : splitAtCommas(value)) {
         options.initialRadii.push_back(parsePositiveNumber(argument, radius));
       }
+    } else if (argument == "--puncture") {
+      options.punctures.push_back(parsePuncture(argument, value));
+    } else if (argument == "--radius-per-mass") {
+      if (!radiiPerMassGiven) {
+        options.radiiPerMass.clear();
+        radiiPerMassGiven = true;
+      }
+      for (const std::string& factor : splitAtCommas(value)) {
+        options.radiiPerMass.push_back(parsePositiveNumber(argument, factor));
+      }
     } else if (argument == "--lmax") {
       options.lMax = parsePositiveInteger(argument, value);
+      lMaxGiven = true;
     } else if (argument == "--support-radius") {
       options.supportRadius = parsePositiveNumber(argument, value);
     } else if (argument == "--tolerance") {
@@ -160,8 +190,23 @@ PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arg
   if (options.inputFile.empty()) {
     throw std::invalid_argument("--input is required");
   }
-  if (options.initialRadii.empty()) {
-    throw std::invalid_argument("--radius is required");
+  if (!options.punctures.empty()) {
+    if (!options.initialRadii.empty()) {
+      throw std::invalid_argument(
+        "--radius is for a single search; with --puncture use "
+        "--radius-per-mass");
+    }
+    if (centreGiven) {
+      throw std::invalid_argument(
+        "--centre is for a single search; --puncture gives the positions");
+    }
+    if (!lMaxGiven) {
+      options.lMax = PostprocessOptions::PunctureLMax;
+    }
+  } else if (radiiPerMassGiven) {
+    throw std::invalid_argument("--radius-per-mass needs --puncture");
+  } else if (options.initialRadii.empty()) {
+    throw std::invalid_argument("--radius or --puncture is required");
   }
   if (options.outputPrefix.empty()) {
     throw std::invalid_argument("--output must not be empty");
@@ -170,28 +215,47 @@ PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arg
 }
 
 std::string PostprocessUsage(const std::string& executable) {
-  return "Usage: " + executable + " --input <snapshot.vtu|snapshot.pvtu> --radius <r>[,<r>...]\n"
-    "         [--output <prefix>] [--centre <x,y,z>] [--mapping names|exagrype|legacy]\n"
-    "         [--lmax <n>] [--support-radius <h>] [--tolerance <t>]\n"
+  const std::string indent(executable.size() + 7, ' ');
+  return "Usage: " + executable + " --input <snapshot> --radius <r>[,<r>...]\n"
+    + indent + "[--centre <x,y,z>] [options]\n"
+    "       " + executable + " --input <snapshot> --puncture <x,y,z:m>...\n"
+    + indent + "[--radius-per-mass <f>[,<f>...]] [options]\n"
+    "Options: [--output <prefix>] [--mapping names|exagrype|legacy] [--lmax <n>]\n"
+    "         [--support-radius <h>] [--tolerance <t>]\n"
     "\n"
-    "Finds one apparent horizon in a VTK snapshot (convert a Peano patch file with\n"
-    "src/tarch/plotter/api/render.py --filter-fine-grid). Starting from a sphere of\n"
-    "each initial radius around the centre in turn, it stops at the first search\n"
-    "that converges.\n"
+    "Finds apparent horizons in a VTK snapshot (convert a Peano patch file with\n"
+    "src/tarch/plotter/api/render.py --filter-fine-grid).\n"
+    "\n"
+    "With --radius it searches for one horizon: starting from a sphere of each\n"
+    "initial radius around the centre in turn, it stops at the first search that\n"
+    "converges.\n"
+    "\n"
+    "With --puncture, given once per black hole with m its mass, it searches for\n"
+    "each puncture's own horizon, then for a common horizon around each pair whose\n"
+    "horizons are at most 0.5 (m1 + m2) apart, and checks each common horizon\n"
+    "found. An individual search rejects a surface that encloses another puncture.\n"
     "\n"
     "  --input           snapshot to read (.vtu, or a .pvtu series)\n"
     "  --radius          initial radii, tried in order; repeat or separate by commas\n"
-    "  --output          writes <prefix>.txt (summary) and <prefix>.vtp (surface);\n"
-    "                    default apparent-horizon\n"
     "  --centre          centre of the initial spheres; default 0,0,0\n"
+    "  --puncture        position and mass of a black hole; repeat for each\n"
+    "  --radius-per-mass initial radii of each puncture's search, in units of its\n"
+    "                    mass, tried in order; default 0.35,0.5,0.25\n"
+    "  --output          one search writes <prefix>.txt (summary) and <prefix>.vtp\n"
+    "                    (surface); with --puncture, <prefix>.txt is the catalogue\n"
+    "                    and each horizon gets <prefix>-<kind>-<i>-<id>.txt and .vtp;\n"
+    "                    default apparent-horizon\n"
     "  --mapping         where the fields are: by component name (names, default),\n"
     "                    exagrype.api layout (exagrype), legacy ccz4.py (legacy)\n"
-    "  --lmax            highest spherical-harmonic degree; default 4\n"
+    "  --lmax            highest spherical-harmonic degree; default 4, or 8 with\n"
+    "                    --puncture\n"
     "  --support-radius  interpolation support; default three times the finest\n"
     "                    cell spacing\n"
     "  --tolerance       convergence threshold on the spectral residual; default 1e-8\n"
     "\n"
-    "Exit status: 0 if a horizon was found, 1 if not, 2 on an error.\n";
+    "Exit status: 0 if a horizon was found (with --puncture, every puncture's own\n"
+    "horizon; common horizons are reported but do not count), 1 if not, 2 on an\n"
+    "error.\n";
 }
 
 std::optional<SourceVariableMapping> PostprocessSourceMapping(PostprocessMapping mapping) {
@@ -240,6 +304,34 @@ AHSearchOptions MakePostprocessSearchOptions(const PostprocessOptions& options,
   };
   search.solver.tolerance = options.tolerance;
   return search;
+}
+
+AHCommonHorizonSearchOptions MakePostprocessCatalogueOptions(
+  const PostprocessOptions& options, double supportRadius) {
+  const AHSearchOptions single =
+    MakePostprocessSearchOptions(options, supportRadius);
+  AHCommonHorizonSearchOptions catalogue;
+  double smallestMass = std::numeric_limits<double>::infinity();
+  for (std::size_t i = 0; i < options.punctures.size(); ++i) {
+    const PostprocessPuncture& puncture = options.punctures[i];
+    AHPhysicalBlackHole blackHole{.id = "bh" + std::to_string(i),
+                                  .mass = puncture.mass,
+                                  .physicalPosition = puncture.position};
+    for (const double factor : options.radiiPerMass) {
+      blackHole.attempts.push_back({.referencePoint = puncture.position,
+                                    .initialRadius = factor * puncture.mass});
+    }
+    catalogue.blackHoles.push_back(std::move(blackHole));
+    smallestMass = std::min(smallestMass, puncture.mass);
+  }
+  catalogue.lMax = single.lMax;
+  catalogue.interpolation = single.interpolation;
+  catalogue.solver = single.solver;
+  if (!options.punctures.empty()) {
+    catalogue.validation.spectralResidualTolerance =
+      options.tolerance / smallestMass;
+  }
+  return catalogue;
 }
 
 }  // namespace exahype2::ccz4::ahf

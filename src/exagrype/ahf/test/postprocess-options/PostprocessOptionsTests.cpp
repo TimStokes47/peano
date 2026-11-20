@@ -1,6 +1,7 @@
 #include "../require-asserts.h"
 
 #include "../../ahf-postprocess-options.h"
+#include "../brill-lindquist-grid.h"
 
 #include <cassert>
 #include <cmath>
@@ -35,6 +36,8 @@ void TestDefaults() {
   assert(options.lMax == 4);
   assert(!options.supportRadius.has_value());
   assert(options.tolerance == 1.0e-8);
+  assert(options.punctures.empty());
+  assert((options.radiiPerMass == std::vector<double>{0.35, 0.5, 0.25}));
   assert(!options.help);
 
   std::cout << "ahf-postprocess needs only --input and --radius" << std::endl;
@@ -69,13 +72,15 @@ void TestHelp() {
   assert(ParsePostprocessArguments({"--help"}).help);
   assert(ParsePostprocessArguments({"-h"}).help);
   assert(PostprocessUsage("ahf-postprocess").find("--support-radius") != std::string::npos);
+  assert(PostprocessUsage("ahf-postprocess").find("--puncture") !=
+         std::string::npos);
 
   std::cout << "ahf-postprocess --help needs no other option" << std::endl;
 }
 
 void TestInvalidArguments() {
   ExpectRejected({"--radius", "1"}, "--input is required");
-  ExpectRejected({"--input", "a.vtu"}, "--radius is required");
+  ExpectRejected({"--input", "a.vtu"}, "--radius or --puncture is required");
   ExpectRejected({"--input", "a.vtu", "--radius", "1", "--verbose"},
                  "--verbose is not an option");
   ExpectRejected({"--input", "a.vtu", "--radius"}, "--radius needs a value");
@@ -181,6 +186,132 @@ void TestSearchOptions() {
   std::cout << "Each initial radius becomes one search attempt around the centre" << std::endl;
 }
 
+void TestPunctures() {
+  const PostprocessOptions options = ParsePostprocessArguments({
+    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5",
+    "--puncture", "-0.2,0.1,0:0.3"});
+  assert(options.initialRadii.empty());
+  assert(options.punctures.size() == 2);
+  assert(options.punctures[0].position.x == 0.25);
+  assert(options.punctures[0].position.y == 0.0);
+  assert(options.punctures[0].mass == 0.5);
+  assert(options.punctures[1].position.x == -0.2);
+  assert(options.punctures[1].position.y == 0.1);
+  assert(options.punctures[1].mass == 0.3);
+  assert((options.radiiPerMass == std::vector<double>{0.35, 0.5, 0.25}));
+  assert(options.lMax == 8);
+
+  // The first --radius-per-mass replaces the defaults, later ones add to it.
+  assert((ParsePostprocessArguments({"--input", "a.vtu",
+                                     "--puncture", "0,0,0:1",
+                                     "--radius-per-mass", "0.4,0.3",
+                                     "--radius-per-mass", "0.2"})
+            .radiiPerMass == std::vector<double>{0.4, 0.3, 0.2}));
+
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,0,0"}, "--puncture expects x,y,z:m");
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,0:1"}, "--puncture expects x,y,z:m");
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,0,0:1:2"},
+                 "--puncture expects x,y,z:m");
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,0,0:0"},
+                 "--puncture expects a positive number");
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,y,0:1"},
+                 "--puncture expects a number, not 'y'");
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,0,0:1", "--radius", "1"},
+                 "with --puncture use --radius-per-mass");
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,0,0:1", "--centre", "0,0,0"},
+                 "--puncture gives the positions");
+  ExpectRejected({"--input", "a.vtu", "--radius", "1", "--radius-per-mass", "0.3"},
+                 "--radius-per-mass needs --puncture");
+  ExpectRejected({"--input", "a.vtu", "--puncture", "0,0,0:1", "--radius-per-mass", "0"},
+                 "--radius-per-mass expects a positive number");
+
+  std::cout << "--puncture gives each black hole's position and mass, instead of --radius"
+            << std::endl;
+}
+
+void TestCatalogueOptions() {
+  const PostprocessOptions options = ParsePostprocessArguments({
+    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5",
+    "--puncture", "-0.2,0.1,0:0.25", "--radius-per-mass", "0.4,0.2",
+    "--lmax", "6", "--tolerance", "1e-7"});
+  const AHCommonHorizonSearchOptions catalogue =
+    MakePostprocessCatalogueOptions(options, 0.25);
+  assert(catalogue.blackHoles.size() == 2);
+  for (std::size_t i = 0; i < 2; ++i) {
+    const AHPhysicalBlackHole& blackHole = catalogue.blackHoles[i];
+    const PostprocessPuncture& puncture = options.punctures[i];
+    assert(blackHole.id == "bh" + std::to_string(i));
+    assert(blackHole.mass == puncture.mass);
+    assert(blackHole.physicalPosition.has_value());
+    assert(blackHole.physicalPosition->x == puncture.position.x);
+    assert(blackHole.physicalPosition->y == puncture.position.y);
+    assert(blackHole.attempts.size() == 2);
+    for (const AHSearchAttempt& attempt : blackHole.attempts) {
+      assert(attempt.referencePoint.x == puncture.position.x);
+      assert(attempt.referencePoint.y == puncture.position.y);
+      assert(attempt.initialCoefficients.empty());
+    }
+    assert(blackHole.attempts[0].initialRadius == 0.4 * puncture.mass);
+    assert(blackHole.attempts[1].initialRadius == 0.2 * puncture.mass);
+  }
+  assert(catalogue.lMax == 6);
+  assert(catalogue.interpolation.method ==
+         CartesianToSurfaceMethod::RadiusWeightedPolynomial);
+  assert(catalogue.interpolation.polynomialDegree == 3);
+  assert(catalogue.interpolation.supportRadius == 0.25);
+  assert(catalogue.solver.tolerance == 1.0e-7);
+  // The common search stops at 1e-7 / 0.75; the residual bound of the
+  // validation, 1e-7 / 0.25, is above that.
+  assert(catalogue.validation.spectralResidualTolerance == 1.0e-7 / 0.25);
+  assert(catalogue.individualsExcludeOtherBlackHoles);
+  assert(catalogue.candidates.searchMarginPerMass == 0.5);
+  assert(!catalogue.candidates.unconditionalAllBlackHoles);
+  ValidateAHPhysicalBlackHoles(catalogue.blackHoles);
+
+  std::cout << "Each puncture becomes a black hole searched from multiples of its mass"
+            << std::endl;
+}
+
+// What ahf-postprocess --puncture 0.25,0,0:0.5 --puncture -0.25,0,0:0.5 runs,
+// on Brill-Lindquist data sampled as TwoPunctures gives it for punctures
+// without momentum or spin (spacing 0.05). With the defaults, both individual
+// horizons and the common horizon are found from the first attempt, and the
+// common horizon validates. Analytic irreducible masses (lMax 16): 0.749987
+// for each individual horizon, 0.998248 for the common one; this grid gives
+// them to 6e-4 and 1e-5. The test runs at lMax 4, not the program's default
+// of 8 with punctures, which takes about ten times longer in a debug build.
+void TestBrillLindquistPunctures() {
+  const BrillLindquist binary{
+    {{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
+  const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
+  const PostprocessOptions options = ParsePostprocessArguments({
+    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5",
+    "--puncture", "-0.25,0,0:0.5", "--lmax", "4"});
+  const double supportRadius = 3.0 * FinestGridSpacing(grid);
+  const AHHorizonCatalogue catalogue = FindApparentHorizons(
+    grid, MakePostprocessCatalogueOptions(options, supportRadius));
+
+  assert(catalogue.individuals.allTargetsFound);
+  for (const AHHorizonTargetResult& target : catalogue.individuals.targets) {
+    assert(target.successfulAttempt == 0);
+    assert(std::abs(target.horizon->irreducibleMass / 0.749987 - 1.0) <
+           2.0e-3);
+  }
+  assert(catalogue.commonHorizons.size() == 1);
+  const AHCommonHorizonCatalogueEntry& common = catalogue.commonHorizons[0];
+  assert(common.memberIds == (std::vector<std::string>{"bh0", "bh1"}));
+  assert(common.reason.triggeredPair);
+  assert(common.search.successfulAttempt == 0);
+  assert(common.validation.status ==
+         AHCommonHorizonValidationStatus::FullyValidated);
+  assert(std::abs(common.search.horizon->irreducibleMass / 0.998248 - 1.0) <
+         2.0e-4);
+
+  std::cout << "On Brill-Lindquist data, the --puncture defaults find and validate all three "
+               "horizons"
+            << std::endl;
+}
+
 }  // namespace
 }  // namespace exahype2::ccz4::ahf::tests::postprocess
 
@@ -196,6 +327,9 @@ int main() {
   TestSourceMapping();
   TestFinestGridSpacing();
   TestSearchOptions();
+  TestPunctures();
+  TestCatalogueOptions();
+  TestBrillLindquistPunctures();
 
   std::cout << "All postprocess option tests completed." << std::endl;
   return 0;

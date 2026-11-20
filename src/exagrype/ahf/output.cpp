@@ -55,13 +55,6 @@ std::string TargetFilename(const AHMultiHorizonOutputOptions& options,
          "-" + SafeFilenameId(targetId) + extension;
 }
 
-std::string CatalogueFilename(const AHMultiHorizonOutputOptions& options,
-                              const char* kind, std::size_t index,
-                              const std::string& id, const char* extension) {
-  return options.horizonFilenamePrefix + "-" + kind + "-" +
-    std::to_string(index) + "-" + SafeFilenameId(id) + extension;
-}
-
 AHSearchResult AsSearchResult(const AHHorizonTargetResult& target) {
   return {
     .converged = target.converged,
@@ -133,6 +126,13 @@ std::ofstream OpenOutput(const std::string& filename) {
 }
 
 }  // namespace
+
+std::string AHCatalogueFilename(const AHMultiHorizonOutputOptions& options,
+                                const char* kind, std::size_t index,
+                                const std::string& id, const char* extension) {
+  return options.horizonFilenamePrefix + "-" + kind + "-" +
+    std::to_string(index) + "-" + SafeFilenameId(id) + extension;
+}
 
 void ValidateAHOutputOptions(const AHOutputOptions& options) {
   if (options.summaryFilename.empty()) {
@@ -717,22 +717,22 @@ AHHorizonCatalogue WriteAHToFile(
   WriteAHHorizonCatalogueSummary(result, outputOptions.summaryFilename);
   for (std::size_t i = 0; i < result.individuals.targets.size(); ++i) {
     const auto& target = result.individuals.targets[i];
-    WriteAHSearchSummary(AsSearchResult(target), CatalogueFilename(
+    WriteAHSearchSummary(AsSearchResult(target), AHCatalogueFilename(
       outputOptions, "individual", i, target.id, ".txt"));
     if (!target.converged || !target.horizon.has_value() ||
         !target.horizon->surfaceAvailable) continue;
-    WriteAHSurfaceToVTP(*target.horizon, CatalogueFilename(
+    WriteAHSurfaceToVTP(*target.horizon, AHCatalogueFilename(
       outputOptions, "individual", i, target.id, ".vtp"),
       outputOptions.visualization);
   }
   for (std::size_t i = 0; i < result.commonHorizons.size(); ++i) {
     const auto& entry = result.commonHorizons[i];
-    WriteAHSearchSummary(AsSearchResult(entry.search), CatalogueFilename(
+    WriteAHSearchSummary(AsSearchResult(entry.search), AHCatalogueFilename(
       outputOptions, "common", i, entry.id, ".txt"));
     if (entry.validation.status ==
           AHCommonHorizonValidationStatus::FullyValidated &&
         entry.search.horizon.has_value()) {
-      WriteAHSurfaceToVTP(*entry.search.horizon, CatalogueFilename(
+      WriteAHSurfaceToVTP(*entry.search.horizon, AHCatalogueFilename(
         outputOptions, "common", i, entry.id, ".vtp"),
         outputOptions.visualization);
     }
