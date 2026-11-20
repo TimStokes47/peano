@@ -1,9 +1,11 @@
 name: AHF tests
 
 # Runs on a push to any branch that touches the module, so a branch in a fork
-# is checked before its PR is opened, and on every PR into the shared ExaGRyPE
-# branches. PRs have no path filter: a required check must report on every PR,
-# or a PR that does not trigger it can never be merged.
+# is checked before its PR is opened, and on PRs into the shared ExaGRyPE
+# branches that touch it. The PR path filter keeps the job off unrelated PRs,
+# such as the frequent p4 -> exagrype merges upstream. It also means the job
+# cannot be a required check, since a PR that does not trigger it could never
+# be merged: drop the filter before a ruleset requires it.
 on:
   push:
     paths:
@@ -13,6 +15,9 @@ on:
     branches:
       - exagrype
       - exagrype-*
+    paths:
+      - src/exagrype/ahf/**
+      - .github/workflows/exagrype-ahf-tests.yml
   workflow_dispatch:
 
 permissions:
@@ -22,8 +27,8 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Both jobs run the same steps; keep them identical. The job names are what a
-# ruleset requires, so they carry no compiler versions.
+# Both jobs run the same steps; keep them identical. The job names carry no
+# compiler versions, so they stay stable should a ruleset require them.
 #
 # Debug, never Release: the tests check with assert, which NDEBUG removes, and
 # Debug also turns on the std::array and std::vector bounds checks. VTK is left
