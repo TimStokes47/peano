@@ -381,6 +381,9 @@ void TestExplicitFallbackAfterIndividualFailure() {
      .visualization = {8, 5}});
   const std::string commonBase =
     prefix + "-common-0-common_failed_found_";
+  assert(AHCatalogueFilename({.horizonFilenamePrefix = prefix}, "common", 0,
+                             result.commonHorizons[0].id, ".txt") ==
+         commonBase + ".txt");
   assert(std::filesystem::exists(commonBase + ".txt"));
   assert(!std::filesystem::exists(commonBase + ".vtp"));
   std::ifstream summaryInput(summary);

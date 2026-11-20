@@ -3,6 +3,7 @@
 
 #include "ah-search.h"
 #include "ahf-data.h"
+#include "common-horizon-search.h"
 
 #include <optional>
 #include <string>
@@ -20,18 +21,39 @@ enum class PostprocessMapping {
   LegacyCCZ4
 };
 
+/** A black hole given with --puncture x,y,z:m. */
+struct PostprocessPuncture {
+  ReferencePoint position{0.0, 0.0, 0.0};
+  double mass = 1.0;
+};
+
 /**
- * Command line of ahf-postprocess. It searches for one horizon, trying the
- * initial radii in order around one centre, and stops at the first that
- * converges.
+ * Command line of ahf-postprocess. Without punctures it searches for one
+ * horizon, trying the initial radii in order around one centre, and stops at
+ * the first that converges. With punctures it searches for each puncture's
+ * horizon and then for the common horizons that FindApparentHorizons plans
+ * from them.
  */
 struct PostprocessOptions {
   std::string inputFile;
-  /** Writes <outputPrefix>.txt (summary) and, on success, <outputPrefix>.vtp (surface). */
+  /**
+   * One search writes <outputPrefix>.txt (summary) and, on success,
+   * <outputPrefix>.vtp (surface). With punctures, <outputPrefix>.txt is the
+   * catalogue summary, and each horizon gets its own files, named by
+   * AHCatalogueFilename with outputPrefix as horizonFilenamePrefix.
+   */
   std::string outputPrefix = "apparent-horizon";
   PostprocessMapping mapping = PostprocessMapping::Names;
   ReferencePoint centre{0.0, 0.0, 0.0};
   std::vector<double> initialRadii;
+  std::vector<PostprocessPuncture> punctures;
+  /**
+   * Initial radii of each puncture's search, in units of its mass. An isolated
+   * puncture of bare mass m has its horizon at coordinate radius m/2; a
+   * companion makes it smaller, about 0.33 m for the equal-mass binary at
+   * separation m (the Brill-Lindquist case the defaults were tried on).
+   */
+  std::vector<double> radiiPerMass{0.35, 0.5, 0.25};
   int lMax = 4;
   /** Interpolation support radius; without one, three times the finest cell spacing. */
   std::optional<double> supportRadius;
@@ -43,7 +65,9 @@ struct PostprocessOptions {
  * Parse the arguments that follow the program name.
  *
  * @throws std::invalid_argument for an unknown option, a missing or malformed
- *         value, or a missing --input or --radius (unless --help is given).
+ *         value, a missing --input, neither --radius nor --puncture, or
+ *         --puncture together with --radius or --centre (unless --help is
+ *         given).
  */
 PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arguments);
 
@@ -68,6 +92,21 @@ double FinestGridSpacing(const GridData& gridData);
  */
 AHSearchOptions MakePostprocessSearchOptions(const PostprocessOptions& options,
                                              double supportRadius);
+
+/**
+ * The catalogue configuration for punctures: black holes bh0, bh1, ... at the
+ * punctures, each searched from radiiPerMass times its mass, with the
+ * interpolation, lMax and tolerance of MakePostprocessSearchOptions and the
+ * default candidate planning and validation.
+ *
+ * The solver stops at tolerance / massScale, and a common search has the
+ * members' total mass as its massScale, while the validation compares the
+ * residual with an absolute bound. That bound is therefore tolerance divided
+ * by the smallest mass, which no common horizon's total mass can be below, so
+ * that a converged common solve is never rejected for its residual.
+ */
+AHCommonHorizonSearchOptions MakePostprocessCatalogueOptions(
+  const PostprocessOptions& options, double supportRadius);
 
 }  // namespace exahype2::ccz4::ahf
 

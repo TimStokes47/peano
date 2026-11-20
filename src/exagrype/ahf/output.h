@@ -131,6 +131,18 @@ AHBinaryMergerResult WriteAHToFile(
   const AHMultiHorizonOutputOptions& outputOptions = {}
 );
 
+/**
+ * The per-horizon file the catalogue workflow writes for entry @p index of
+ * @p kind ("individual" or "common"):
+ *
+ *   horizonFilenamePrefix + "-" + kind + "-" + index + "-" + id + extension,
+ *
+ * with the characters of @p id that are unsafe in a filename replaced by '_'.
+ */
+std::string AHCatalogueFilename(const AHMultiHorizonOutputOptions& options,
+                                const char* kind, std::size_t index,
+                                const std::string& id, const char* extension);
+
 /** Catalogue summary retaining individual failures and common validation. */
 void WriteAHHorizonCatalogueSummary(
   const AHHorizonCatalogue& result,
