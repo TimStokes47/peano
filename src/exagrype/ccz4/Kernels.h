@@ -41,7 +41,7 @@ namespace exagrype {
        * numerical scheme adds them with lopsided stencils, or the solver
        * appends them with the central differences of the scheme
        * (exahype2::fd::addCentralAdvection()). Both add the terms of the
-       * entries which exagrype.api.CCZ4SolverBase.lopsided_advection_quantities()
+       * entries which exagrype.api.CCZ4SolverBase.advected_quantities()
        * names, i.e. this list is the only place that defines them. A kernel
        * that held one of these terms would add it a second time. The
        * rationale is written down in
