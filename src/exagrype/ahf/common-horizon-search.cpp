@@ -17,19 +17,6 @@ double Distance(const ReferencePoint& a, const ReferencePoint& b) {
   return std::hypot(a.x - b.x, a.y - b.y, a.z - b.z);
 }
 
-double Radius(const AHFinderResult& result, double rho, double sigma) {
-  const auto modes = EnumerateModes(result.lMax);
-  if (modes.size() != result.solver.coefficients.size()) {
-    throw std::invalid_argument("Common-horizon coefficient count does not match lMax");
-  }
-  double value = 0.0;
-  for (std::size_t i = 0; i < modes.size(); ++i) {
-    value += result.solver.coefficients[i] *
-      EvalModeValue(modes[i].first, modes[i].second, rho, sigma);
-  }
-  return value;
-}
-
 std::vector<std::string> Canonical(std::vector<std::string> ids) {
   std::sort(ids.begin(), ids.end());
   ids.erase(std::unique(ids.begin(), ids.end()), ids.end());
@@ -212,7 +199,7 @@ AHCommonHorizonValidation ValidateCommonHorizon(
       for (int ir = 0; ir < options.enclosureRhoPoints; ++ir) {
         const double rho = 2.0 * std::numbers::pi * ir /
           static_cast<double>(options.enclosureRhoPoints);
-        const double radius = Radius(common, rho, sigma);
+        const double radius = SurfaceRadius(common, rho, sigma);
         if (!std::isfinite(radius) || radius <= 0.0) v.surfaceRegular = false;
       }
     }
@@ -240,7 +227,7 @@ AHCommonHorizonValidation ValidateCommonHorizon(
         for (int ir = 0; ir < options.enclosureRhoPoints; ++ir) {
           const double rho = 2.0 * std::numbers::pi * ir /
             static_cast<double>(options.enclosureRhoPoints);
-          const double memberRadius = Radius(member.horizon, rho, sigma);
+          const double memberRadius = SurfaceRadius(member.horizon, rho, sigma);
           const double c = std::cos(sigma);
           const ReferencePoint point{
             member.horizon.referencePoint.x + memberRadius * c * std::cos(rho),
@@ -253,7 +240,8 @@ AHCommonHorizonValidation ValidateCommonHorizon(
           const double commonRho = std::atan2(dy, dx);
           const double commonSigma = radialDistance > 0.0
             ? std::asin(std::clamp(dz / radialDistance, -1.0, 1.0)) : 0.0;
-          const double clearance = Radius(common, commonRho, commonSigma) - radialDistance;
+          const double clearance =
+            SurfaceRadius(common, commonRho, commonSigma) - radialDistance;
           v.minimumEnclosureClearance = std::min(v.minimumEnclosureClearance, clearance);
           if (!std::isfinite(clearance) || clearance < -options.enclosureTolerance) {
             availableMembersEnclosed = false;
@@ -292,7 +280,8 @@ AHCommonHorizonValidation ValidateCommonHorizon(
       const double rho = std::atan2(dy, dx);
       const double sigma = radialDistance > 0.0
         ? std::asin(std::clamp(dz / radialDistance, -1.0, 1.0)) : 0.0;
-      const double clearance = Radius(common, rho, sigma) - radialDistance;
+      const double clearance =
+        SurfaceRadius(common, rho, sigma) - radialDistance;
       v.minimumPhysicalPositionClearance = std::min(
         v.minimumPhysicalPositionClearance, clearance);
       if (!std::isfinite(clearance) || clearance < -options.enclosureTolerance) {
@@ -341,7 +330,9 @@ AHHorizonCatalogue FindApparentHorizons(
   const SpectralBasis basis = BuildSpectralBasis(options.lMax);
   const CartesianPointInterpolator interpolator(gridData, options.interpolation);
   const AHMultiHorizonOptions individualOptions{
-    MakeIndividualHorizonTargets(options.blackHoles), options.lMax,
+    MakeIndividualHorizonTargets(
+      options.blackHoles, options.individualsExcludeOtherBlackHoles),
+    options.lMax,
     options.interpolation, options.solver};
   AHHorizonCatalogue catalogue;
   catalogue.individuals = FindApparentHorizons(basis, interpolator, individualOptions);

@@ -38,8 +38,22 @@ struct AHHorizonPairGap {
 };
 
 struct AHCommonHorizonCandidateOptions {
-  /** Trigger when surfaceGap <= searchMargin; coordinate-length units. */
+  /**
+   * A pair triggers when surfaceGap <= searchMargin + searchMarginPerMass *
+   * (m_i + m_j), with the masses the black holes were given. Both margins are
+   * in coordinate-length units.
+   *
+   * A common horizon forms while the individual horizons are still apart: on
+   * equal-mass Brill-Lindquist data it exists up to a separation of 0.766 M,
+   * where the gap between the individual horizons is 0.414 M (M the total
+   * bare mass). The default per-mass margin covers that with about 20%
+   * headroom; with unequal masses the gaps measured were smaller. A pair that
+   * triggers without a common horizon costs one failed search. The margins
+   * were calibrated on time-symmetric data at t = 0; evolved data uses other
+   * coordinates, where the gap at formation has not been measured.
+   */
   double searchMargin = 0.0;
+  double searchMarginPerMass = 0.5;
   bool includeTriggeredPairs = true;
   bool includeConnectedComponents = true;
   /** Always add the group containing every observed black hole. */
@@ -75,9 +89,15 @@ void ValidateAHPhysicalBlackHoles(
   const std::vector<AHPhysicalBlackHole>& blackHoles
 );
 
-/** Convert user identities into the existing individual-target representation. */
+/**
+ * Convert user identities into the existing individual-target representation.
+ * With excludeOtherBlackHoles, each target excludes the other black holes'
+ * physical positions, so that an individual search cannot settle on a surface
+ * around another black hole, such as the common horizon.
+ */
 std::vector<AHHorizonTarget> MakeIndividualHorizonTargets(
-  const std::vector<AHPhysicalBlackHole>& blackHoles
+  const std::vector<AHPhysicalBlackHole>& blackHoles,
+  bool excludeOtherBlackHoles = true
 );
 
 void ValidateAHCommonHorizonCandidateOptions(

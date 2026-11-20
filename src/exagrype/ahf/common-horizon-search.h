@@ -106,6 +106,11 @@ struct AHCommonHorizonSearchOptions {
   AHCommonHorizonCandidateOptions candidates{};
   AHCommonHorizonTargetOptions commonTargets{};
   AHCommonHorizonValidationOptions validation{};
+  /**
+   * Reject an individual surface that encloses another black hole's
+   * physicalPosition; see MakeIndividualHorizonTargets.
+   */
+  bool individualsExcludeOtherBlackHoles = true;
   int lMax = 2;
   CartesianToSurfaceOptions interpolation{};
   SpectralNewtonOptions solver{};

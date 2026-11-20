@@ -24,27 +24,11 @@ double Distance(const ReferencePoint& a, const ReferencePoint& b) {
 
 double RadiusInDirection(const AHFinderResult& horizon,
                          const ReferencePoint& destination) {
-  const double dx = destination.x - horizon.referencePoint.x;
-  const double dy = destination.y - horizon.referencePoint.y;
-  const double dz = destination.z - horizon.referencePoint.z;
-  const double distance = std::sqrt(dx * dx + dy * dy + dz * dz);
-  if (!(distance > 0.0)) {
+  if (!(Distance(horizon.referencePoint, destination) > 0.0)) {
     throw std::invalid_argument(
       "PlanCommonHorizonCandidates: distinct horizons have coincident reference points");
   }
-  double rho = std::atan2(dy, dx);
-  if (rho < 0.0) rho += 2.0 * std::numbers::pi;
-  const double sigma = std::asin(std::clamp(dz / distance, -1.0, 1.0));
-  const auto modes = EnumerateModes(horizon.lMax);
-  if (modes.size() != horizon.solver.coefficients.size()) {
-    throw std::invalid_argument(
-      "PlanCommonHorizonCandidates: coefficient count does not match lMax");
-  }
-  double radius = 0.0;
-  for (std::size_t j = 0; j < modes.size(); ++j) {
-    radius += horizon.solver.coefficients[j] *
-      EvalModeValue(modes[j].first, modes[j].second, rho, sigma);
-  }
+  const double radius = SurfaceRadiusTowards(horizon, destination);
   if (!std::isfinite(radius) || radius <= 0.0) {
     throw std::invalid_argument(
       "PlanCommonHorizonCandidates: directional radius is invalid");
@@ -127,17 +111,26 @@ void ValidateAHPhysicalBlackHoles(
 }
 
 std::vector<AHHorizonTarget> MakeIndividualHorizonTargets(
-  const std::vector<AHPhysicalBlackHole>& blackHoles
+  const std::vector<AHPhysicalBlackHole>& blackHoles,
+  bool excludeOtherBlackHoles
 ) {
   ValidateAHPhysicalBlackHoles(blackHoles);
   std::vector<AHHorizonTarget> targets;
   targets.reserve(blackHoles.size());
   for (const AHPhysicalBlackHole& blackHole : blackHoles) {
+    std::vector<ReferencePoint> others;
+    for (const AHPhysicalBlackHole& other : blackHoles) {
+      if (excludeOtherBlackHoles && &other != &blackHole &&
+          other.physicalPosition.has_value()) {
+        others.push_back(*other.physicalPosition);
+      }
+    }
     targets.push_back({
       .id = blackHole.id,
       .kind = AHHorizonKind::Individual,
       .attempts = blackHole.attempts,
-      .massScale = blackHole.mass
+      .massScale = blackHole.mass,
+      .excludedPoints = std::move(others)
     });
   }
   return targets;
@@ -149,6 +142,12 @@ void ValidateAHCommonHorizonCandidateOptions(
   if (!std::isfinite(options.searchMargin) || options.searchMargin < 0.0) {
     throw std::invalid_argument(
       "ValidateAHCommonHorizonCandidateOptions: searchMargin must be finite and non-negative");
+  }
+  if (!std::isfinite(options.searchMarginPerMass) ||
+      options.searchMarginPerMass < 0.0) {
+    throw std::invalid_argument(
+      "ValidateAHCommonHorizonCandidateOptions: searchMarginPerMass must be "
+      "finite and non-negative");
   }
   for (const auto& subset : options.requestedSubsets) {
     if (CanonicalMembers(subset).size() < 2) {
@@ -223,7 +222,8 @@ AHCommonHorizonCandidatePlan PlanCommonHorizonCandidates(
         second.horizon, first.horizon.referencePoint);
       pair.surfaceGap = pair.centreDistance - pair.firstFacingRadius -
         pair.secondFacingRadius;
-      pair.proximityTriggered = pair.surfaceGap <= options.searchMargin;
+      pair.proximityTriggered = pair.surfaceGap <= options.searchMargin +
+        options.searchMarginPerMass * (first.mass + second.mass);
       plan.pairGaps.push_back(pair);
       if (pair.proximityTriggered) {
         components.Join(i, j);

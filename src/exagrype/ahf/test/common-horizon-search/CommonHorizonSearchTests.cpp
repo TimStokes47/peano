@@ -217,6 +217,9 @@ void TestOffAxisFallbackCandidate() {
     {.id = "found", .mass = 2, .attempts = {{found, 1.3}}, .physicalPosition = found}
   };
   options.candidates.requestedSubsets = {{"found", "failed"}};
+  // On this grid every sphere of radius 2 is a horizon, so the individual
+  // horizon encloses the other physical position by construction.
+  options.individualsExcludeOtherBlackHoles = false;
   options.commonTargets.retryRadiusMultipliers = {1};
   options.lMax = 0;
   options.interpolation = Interpolation();
@@ -330,12 +333,26 @@ void TestExplicitFallbackAfterIndividualFailure() {
      .physicalPosition = ReferencePoint{0.1, 0, 0}}
   };
   options.candidates.requestedSubsets = {{"found", "failed"}};
+  // On this grid every sphere of radius 2 is a horizon, so the individual
+  // horizon encloses the other physical position by construction.
+  options.individualsExcludeOtherBlackHoles = false;
   options.commonTargets.retryRadiusMultipliers = {1};
   options.lMax = 0;
   options.interpolation = Interpolation();
   options.validation.spectralResidualTolerance = 1.0;
   options.validation.pointwiseExpansionTolerance = 1.0;
   options.validation.enclosureTolerance = 0.5;
+  // By default an individual surface that encloses another black hole's
+  // physical position is rejected.
+  auto excluding = options;
+  excluding.individualsExcludeOtherBlackHoles =
+    AHCommonHorizonSearchOptions{}.individualsExcludeOtherBlackHoles;
+  const auto rejected = FindCommonApparentHorizons(MakeGrid(), excluding);
+  const auto& found = rejected.individuals.targets[1];
+  assert(!found.converged);
+  assert(found.attempts[0].result.solver.converged);
+  assert(found.attempts[0].rejection.find("encloses") != std::string::npos);
+
   const auto result = FindCommonApparentHorizons(MakeGrid(), options);
   assert(result.individuals.targets.size() == 2);
   assert(!result.individuals.targets[0].converged);
@@ -510,7 +527,7 @@ void TestThreeHoleDeterminismAndSummary() {
 // Two punctures on the x axis at +/- separation / 2, sampled as ExaGRyPE
 // would (TwoPunctures without momentum or spin is Brill-Lindquist), and the
 // catalogue options for them: individual attempts from 0.35 m about each
-// puncture, the common search requested explicitly.
+// puncture.
 AHCommonHorizonSearchOptions BinaryOptions(
   double mPlus, double mMinus, double separation, int lMax) {
   const ReferencePoint plus{separation / 2.0, 0.0, 0.0};
@@ -521,7 +538,6 @@ AHCommonHorizonSearchOptions BinaryOptions(
      .physicalPosition = plus},
     {.id = "minus", .mass = mMinus, .attempts = {{minus, 0.35 * mMinus}},
      .physicalPosition = minus}};
-  options.candidates.unconditionalAllBlackHoles = true;
   options.lMax = lMax;
   options.interpolation = {
     .method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
@@ -530,9 +546,11 @@ AHCommonHorizonSearchOptions BinaryOptions(
   return options;
 }
 
-// Equal masses 1/2 at separation 1/2: the default validation accepts the
-// common horizon found on grid data, and its irreducible mass matches the
-// analytic Brill-Lindquist value, 0.998248 (lMax 16).
+// Equal masses 1/2 at separation 1/2: with default options the common search
+// is planned (the individual horizons are 0.205 apart, within 0.5 times the
+// total mass), and the validation accepts the common horizon found on grid
+// data, whose irreducible mass matches the analytic Brill-Lindquist value,
+// 0.998248 (lMax 16).
 void TestBrillLindquistCommonHorizonValidates() {
   const BrillLindquist binary{
     {{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
@@ -542,6 +560,8 @@ void TestBrillLindquistCommonHorizonValidates() {
   assert(catalogue.individuals.allTargetsFound);
   assert(catalogue.commonHorizons.size() == 1);
   const auto& common = catalogue.commonHorizons[0];
+  assert(common.reason.triggeredPair);
+  assert(!common.reason.unconditionalAllBlackHoles);
   assert(common.search.converged && common.search.horizon.has_value());
   assert(common.validation.valid);
   assert(common.validation.relativeExpansionValid);

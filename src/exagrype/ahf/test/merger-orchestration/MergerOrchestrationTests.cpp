@@ -1,6 +1,7 @@
 #include "../require-asserts.h"
 
 #include "../../apparent-horizon-finder.h"
+#include "../brill-lindquist-grid.h"
 #include "../temporary-directory.h"
 
 #include <algorithm>
@@ -56,16 +57,32 @@ std::string ReadText(const std::filesystem::path& path) {
   return text.str();
 }
 
+// The common search is planned when the initial surfaces' gap is at most
+// searchMarginPerMass (0.5) times the total mass, here 4.
 void TestSeparatedPlan() {
-  const AHBinaryMergerPlan plan = BuildBinaryMergerPlan(Options(1.0));
+  const AHBinaryMergerPlan plan = BuildBinaryMergerPlan(Options(2.0));
   assert(!plan.commonSearchEnabled);
-  assert(std::abs(plan.separation - 2.0) < 1.0e-14);
+  assert(std::abs(plan.separation - 4.0) < 1.0e-14);
   assert(std::abs(plan.facingRadii[0] - 0.2) < 1.0e-14);
+  assert(std::abs(plan.surfaceGap - 3.6) < 1.0e-14);
   assert(plan.search.targets.size() == 2);
   assert(plan.search.targets[0].id == "plus");
   assert(plan.search.targets[1].id == "minus");
   assert(*plan.search.targets[0].massScale == 1.0);
   assert(*plan.search.targets[1].massScale == 3.0);
+  // Each component excludes the other's first reference point.
+  assert(plan.search.targets[0].excludedPoints.size() == 1);
+  assert(plan.search.targets[0].excludedPoints[0].x == -2.0);
+  assert(plan.search.targets[1].excludedPoints[0].x == 2.0);
+
+  // A gap of 1.6 is within the margin of 2; without the margin only overlap
+  // triggers.
+  AHBinaryMergerOptions options = Options(1.0);
+  assert(BuildBinaryMergerPlan(options).commonSearchEnabled);
+  options.searchMarginPerMass = 0.0;
+  const AHBinaryMergerPlan contactOnly = BuildBinaryMergerPlan(options);
+  assert(!contactOnly.commonSearchEnabled);
+  assert(std::abs(contactOnly.surfaceGap - 1.6) < 1.0e-14);
 }
 
 void TestOverlappingPlan() {
@@ -162,6 +179,13 @@ void TestValidation() {
   try { (void)BuildBinaryMergerPlan(invalid); }
   catch (const std::invalid_argument&) { threw = true; }
   assert(threw);
+
+  invalid = Options(1.0);
+  invalid.searchMarginPerMass = -0.1;
+  threw = false;
+  try { (void)BuildBinaryMergerPlan(invalid); }
+  catch (const std::invalid_argument&) { threw = true; }
+  assert(threw);
 }
 
 void TestExecutionAndOutput() {
@@ -191,7 +215,53 @@ void TestExecutionAndOutput() {
   assert(summaryText.find("merger.commonMass = 2") != std::string::npos);
   assert(summaryText.find("targets.count = 3") != std::string::npos);
   assert(!std::filesystem::exists(prefix.string() + "-0-common.vtp"));
+  // Without a reconstructed common surface the validation rejects it.
+  assert(result.commonValidation.has_value());
+  assert(result.commonValidation->status ==
+         AHCommonHorizonValidationStatus::Rejected);
+  assert(summaryText.find("merger.surfaceGap = ") != std::string::npos);
+  assert(summaryText.find("merger.commonValidation.status = rejected") !=
+         std::string::npos);
+  assert(summaryText.find("did not produce a reconstructed surface") !=
+         std::string::npos);
   std::filesystem::remove(summary);
+}
+
+// Equal masses 1/2 at separation 1/2 on Brill-Lindquist data, as ExaGRyPE
+// would produce it. Started from radius 0.375, the plus component converges
+// to the common horizon, which encloses the other component and is
+// rejected; its next attempt finds its own horizon. The common horizon is
+// planned, found and validated, with the analytic irreducible mass 0.998248.
+void TestBrillLindquistMerger() {
+  const BrillLindquist binary{
+    {{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
+  const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
+  AHBinaryMergerOptions options;
+  options.components = {{
+    {{.id = "plus",
+      .attempts = {{{0.25, 0.0, 0.0}, 0.375}, {{0.25, 0.0, 0.0}, 0.175}}}, 0.5},
+    {{.id = "minus", .attempts = {{{-0.25, 0.0, 0.0}, 0.175}}}, 0.5}
+  }};
+  options.commonRadiusFactors = {1.0};
+  options.lMax = 4;
+  options.interpolation = {
+    .method = CartesianToSurfaceMethod::RadiusWeightedPolynomial,
+    .polynomialDegree = 3,
+    .supportRadius = 0.15};
+  const AHBinaryMergerResult result = FindBinaryMergerHorizons(grid, options);
+  assert(result.plan.commonSearchEnabled);
+  assert(result.horizons.targets.size() == 3);
+  const auto& plus = result.horizons.targets[1];
+  assert(plus.id == "plus" && plus.attempts.size() == 2);
+  assert(plus.attempts[0].result.solver.converged);
+  assert(!plus.attempts[0].succeeded);
+  assert(plus.attempts[0].rejection.find("encloses") != std::string::npos);
+  assert(plus.converged && plus.successfulAttempt == 1);
+  assert(std::abs(plus.horizon->irreducibleMass / 0.749987 - 1.0) < 5.0e-3);
+  const auto& common = result.horizons.targets[0];
+  assert(common.converged);
+  assert(result.commonValidation.has_value() && result.commonValidation->valid);
+  assert(std::abs(common.horizon->irreducibleMass / 0.998248 - 1.0) < 2.0e-4);
 }
 
 }  // namespace
@@ -205,4 +275,5 @@ int main() {
   TestOffAxisPlan();
   TestValidation();
   TestExecutionAndOutput();
+  TestBrillLindquistMerger();
 }

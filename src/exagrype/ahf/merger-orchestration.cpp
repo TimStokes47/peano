@@ -80,6 +80,12 @@ void ValidateAHBinaryMergerOptions(const AHBinaryMergerOptions& options) {
     throw std::invalid_argument(
       "ValidateAHBinaryMergerOptions: commonRadiusFactors must not be empty");
   }
+  if (!std::isfinite(options.searchMarginPerMass) ||
+      options.searchMarginPerMass < 0.0) {
+    throw std::invalid_argument(
+      "ValidateAHBinaryMergerOptions: searchMarginPerMass must be finite and "
+      "non-negative");
+  }
   for (double factor : options.commonRadiusFactors) {
     if (!std::isfinite(factor) || factor <= 0.0) {
       throw std::invalid_argument(
@@ -112,9 +118,11 @@ AHBinaryMergerPlan BuildBinaryMergerPlan(
     RadiusInDirection(first, basis, second.referencePoint),
     RadiusInDirection(second, basis, first.referencePoint)
   };
-  plan.commonSearchEnabled =
-    plan.facingRadii[0] + plan.facingRadii[1] > plan.separation;
+  plan.surfaceGap =
+    plan.separation - plan.facingRadii[0] - plan.facingRadii[1];
   plan.commonMass = options.components[0].mass + options.components[1].mass;
+  plan.commonSearchEnabled =
+    plan.surfaceGap <= options.searchMarginPerMass * plan.commonMass;
   plan.commonReferencePoint = {
     (options.components[0].mass * first.referencePoint.x +
      options.components[1].mass * second.referencePoint.x) / plan.commonMass,
@@ -150,12 +158,52 @@ AHBinaryMergerPlan BuildBinaryMergerPlan(
     }
     plan.search.targets.push_back(std::move(common));
   }
-  for (const AHBinaryComponent& component : options.components) {
-    AHHorizonTarget target = component.target;
-    target.massScale = component.mass;
+  for (std::size_t i = 0; i < options.components.size(); ++i) {
+    AHHorizonTarget target = options.components[i].target;
+    target.massScale = options.components[i].mass;
+    // Unless told otherwise, a component must not enclose the other one.
+    if (target.excludedPoints.empty()) {
+      target.excludedPoints.push_back(
+        options.components[1 - i].target.attempts.front().referencePoint);
+    }
     plan.search.targets.push_back(std::move(target));
   }
   return plan;
+}
+
+std::optional<AHCommonHorizonValidation> ValidateBinaryMergerCommonHorizon(
+  const AHBinaryMergerOptions& options,
+  const AHBinaryMergerPlan& plan,
+  const AHMultiHorizonResult& horizons
+) {
+  if (!plan.commonSearchEnabled) return std::nullopt;
+  const AHHorizonTargetResult* common = nullptr;
+  std::vector<AHIndividualHorizonObservation> members;
+  std::vector<ReferencePoint> physicalPositions;
+  for (const AHBinaryComponent& component : options.components) {
+    physicalPositions.push_back(
+      component.target.attempts.front().referencePoint);
+  }
+  for (const AHHorizonTargetResult& target : horizons.targets) {
+    if (target.id == options.commonHorizonId) {
+      common = &target;
+      continue;
+    }
+    for (const AHBinaryComponent& component : options.components) {
+      if (target.id == component.target.id && target.converged &&
+          target.horizon.has_value()) {
+        members.push_back({target.id, component.mass, *target.horizon});
+      }
+    }
+  }
+  AHCommonHorizonValidation validation;
+  if (common == nullptr || !common->horizon.has_value()) {
+    validation.reasons.push_back(
+      "common-horizon solve did not produce a reconstructed surface");
+    return validation;
+  }
+  return ValidateCommonHorizon(
+    *common->horizon, members, physicalPositions, 2, options.validation);
 }
 
 AHBinaryMergerPlan CheckCommonHorizonOfBBH(
@@ -171,6 +219,8 @@ AHBinaryMergerResult FindBinaryMergerHorizons(
   AHBinaryMergerResult result;
   result.plan = BuildBinaryMergerPlan(options);
   result.horizons = FindApparentHorizons(gridData, result.plan.search);
+  result.commonValidation =
+    ValidateBinaryMergerCommonHorizon(options, result.plan, result.horizons);
   return result;
 }
 

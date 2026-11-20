@@ -241,6 +241,45 @@ void TestMeanRadiiOnDistortedSurface() {
                   maxTheta * result.arealRadius / 2.0) < 1.0e-14);
 }
 
+// The directional radius and enclosure test used by the planner, the
+// validation and the searches' excluded points.
+void TestSurfaceRadiusAndEnclosure() {
+  const SpectralBasis basis = BuildSpectralBasis(2);
+  AHFinderResult sphere;
+  sphere.referencePoint = {1.0, -1.0, 0.5};
+  sphere.lMax = 2;
+  sphere.solver.coefficients = MakeSphericalInitialCoefficients(basis, 0.8);
+  assert(std::abs(SurfaceRadius(sphere, 1.0, 0.3) - 0.8) < 1.0e-14);
+  assert(std::abs(SurfaceRadiusTowards(sphere, {1.0, -1.0, 3.0}) - 0.8) <
+         1.0e-14);
+  assert(SurfaceEncloses(sphere, {1.5, -1.0, 0.5}));
+  assert(!SurfaceEncloses(sphere, {1.0, -1.0, 1.4}));
+  assert(SurfaceEncloses(sphere, sphere.referencePoint));
+
+  // An off-centre sphere about the reference point is longer towards +x.
+  std::vector<double> radii(basis.nPoints);
+  for (std::size_t p = 0; p < radii.size(); ++p) {
+    radii[p] = 0.8 + 0.1 * std::cos(basis.rho[p]) * std::cos(basis.sigma[p]);
+  }
+  AHFinderResult distorted = sphere;
+  distorted.solver.coefficients =
+    MakeDistortedInitialCoefficients(basis, radii);
+  assert(SurfaceRadiusTowards(distorted, {2.0, -1.0, 0.5}) > 0.89);
+  assert(SurfaceRadiusTowards(distorted, {0.0, -1.0, 0.5}) < 0.71);
+  assert(SurfaceEncloses(distorted, {1.85, -1.0, 0.5}));
+  assert(!SurfaceEncloses(distorted, {0.15, -1.0, 0.5}));
+
+  bool threw = false;
+  try { (void)SurfaceRadiusTowards(sphere, sphere.referencePoint); }
+  catch (const std::invalid_argument&) { threw = true; }
+  assert(threw);
+  sphere.lMax = 3;
+  threw = false;
+  try { (void)SurfaceRadius(sphere, 0.0, 0.0); }
+  catch (const std::invalid_argument&) { threw = true; }
+  assert(threw);
+}
+
 }  // namespace
 }  // namespace exahype2::ccz4::ahf::tests::result
 
@@ -251,5 +290,6 @@ int main() {
   TestUnavailableSurfacePreservesSolverDiagnostics();
   TestAreaUsesPhysicalMetric();
   TestMeanRadiiOnDistortedSurface();
+  TestSurfaceRadiusAndEnclosure();
   std::cout << "All AHFinderResult tests completed.\n";
 }
