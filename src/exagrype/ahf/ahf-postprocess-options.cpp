@@ -97,9 +97,11 @@ ReferencePoint parseCentre(const std::string& option, const std::string& text) {
 PostprocessPuncture parsePuncture(const std::string& option,
                                   const std::string& text) {
   const std::size_t colon = text.find(':');
-  if (colon == std::string::npos || text.find(':', colon + 1) != std::string::npos
+  if (colon == std::string::npos
+      || text.find(':', colon + 1) != std::string::npos
       || splitAtCommas(text.substr(0, colon)).size() != 3) {
-    throw std::invalid_argument(option + " expects x,y,z:m, not '" + text + "'");
+    throw std::invalid_argument(
+      option + " expects x,y,z:m, not '" + text + "'");
   }
   return {.position = parseCentre(option, text.substr(0, colon)),
           .mass = parsePositiveNumber(option, text.substr(colon + 1))};
@@ -129,8 +131,9 @@ double smallestGap(std::vector<double>& values) {
 PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arguments) {
   PostprocessOptions options;
   const std::vector<std::string> optionsWithValue{
-    "--input", "--output", "--mapping", "--centre", "--center", "--radius", "--puncture",
-    "--radius-per-mass", "--lmax", "--support-radius", "--tolerance"};
+    "--input", "--output", "--mapping", "--centre", "--center", "--radius",
+    "--puncture", "--radius-per-mass", "--lmax", "--support-radius",
+    "--tolerance"};
   bool centreGiven = false;
   bool radiiPerMassGiven = false;
   bool lMaxGiven = false;
@@ -190,7 +193,8 @@ PostprocessOptions ParsePostprocessArguments(const std::vector<std::string>& arg
   if (!options.punctures.empty()) {
     if (!options.initialRadii.empty()) {
       throw std::invalid_argument(
-        "--radius is for a single search; with --puncture use --radius-per-mass");
+        "--radius is for a single search; with --puncture use "
+        "--radius-per-mass");
     }
     if (centreGiven) {
       throw std::invalid_argument(
@@ -304,7 +308,8 @@ AHSearchOptions MakePostprocessSearchOptions(const PostprocessOptions& options,
 
 AHCommonHorizonSearchOptions MakePostprocessCatalogueOptions(
   const PostprocessOptions& options, double supportRadius) {
-  const AHSearchOptions single = MakePostprocessSearchOptions(options, supportRadius);
+  const AHSearchOptions single =
+    MakePostprocessSearchOptions(options, supportRadius);
   AHCommonHorizonSearchOptions catalogue;
   double smallestMass = std::numeric_limits<double>::infinity();
   for (std::size_t i = 0; i < options.punctures.size(); ++i) {
@@ -313,8 +318,8 @@ AHCommonHorizonSearchOptions MakePostprocessCatalogueOptions(
                                   .mass = puncture.mass,
                                   .physicalPosition = puncture.position};
     for (const double factor : options.radiiPerMass) {
-      blackHole.attempts.push_back(
-        {.referencePoint = puncture.position, .initialRadius = factor * puncture.mass});
+      blackHole.attempts.push_back({.referencePoint = puncture.position,
+                                    .initialRadius = factor * puncture.mass});
     }
     catalogue.blackHoles.push_back(std::move(blackHole));
     smallestMass = std::min(smallestMass, puncture.mass);
@@ -323,7 +328,8 @@ AHCommonHorizonSearchOptions MakePostprocessCatalogueOptions(
   catalogue.interpolation = single.interpolation;
   catalogue.solver = single.solver;
   if (!options.punctures.empty()) {
-    catalogue.validation.spectralResidualTolerance = options.tolerance / smallestMass;
+    catalogue.validation.spectralResidualTolerance =
+      options.tolerance / smallestMass;
   }
   return catalogue;
 }

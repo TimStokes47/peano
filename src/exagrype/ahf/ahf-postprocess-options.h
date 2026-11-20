@@ -32,7 +32,17 @@ struct PostprocessPuncture {
  * horizon, trying the initial radii in order around one centre, and stops at
  * the first that converges. With punctures it searches for each puncture's
  * horizon and then for the common horizons that FindApparentHorizons plans
- * from them.
+ * from them:
+ *
+ * @dot
+ * digraph PunctureSearch {
+ *   rankdir=LR; node [shape=box, fontsize=10];
+ *   own [label="each puncture's horizon,\nfrom radiiPerMass times m"];
+ *   plan [label="pairs with gap\n<= 0.5 (m1 + m2)"];
+ *   common [label="common search\nand validation"];
+ *   own -> plan -> common;
+ * }
+ * @enddot
  */
 struct PostprocessOptions {
   std::string inputFile;

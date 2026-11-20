@@ -72,7 +72,8 @@ void TestHelp() {
   assert(ParsePostprocessArguments({"--help"}).help);
   assert(ParsePostprocessArguments({"-h"}).help);
   assert(PostprocessUsage("ahf-postprocess").find("--support-radius") != std::string::npos);
-  assert(PostprocessUsage("ahf-postprocess").find("--puncture") != std::string::npos);
+  assert(PostprocessUsage("ahf-postprocess").find("--puncture") !=
+         std::string::npos);
 
   std::cout << "ahf-postprocess --help needs no other option" << std::endl;
 }
@@ -187,18 +188,22 @@ void TestSearchOptions() {
 
 void TestPunctures() {
   const PostprocessOptions options = ParsePostprocessArguments({
-    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5", "--puncture", "-0.2,0.1,0:0.3"});
+    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5",
+    "--puncture", "-0.2,0.1,0:0.3"});
   assert(options.initialRadii.empty());
   assert(options.punctures.size() == 2);
-  assert(options.punctures[0].position.x == 0.25 && options.punctures[0].position.y == 0.0);
+  assert(options.punctures[0].position.x == 0.25);
+  assert(options.punctures[0].position.y == 0.0);
   assert(options.punctures[0].mass == 0.5);
-  assert(options.punctures[1].position.x == -0.2 && options.punctures[1].position.y == 0.1);
+  assert(options.punctures[1].position.x == -0.2);
+  assert(options.punctures[1].position.y == 0.1);
   assert(options.punctures[1].mass == 0.3);
   assert((options.radiiPerMass == std::vector<double>{0.35, 0.5, 0.25}));
   assert(options.lMax == 8);
 
   // The first --radius-per-mass replaces the defaults, later ones add to it.
-  assert((ParsePostprocessArguments({"--input", "a.vtu", "--puncture", "0,0,0:1",
+  assert((ParsePostprocessArguments({"--input", "a.vtu",
+                                     "--puncture", "0,0,0:1",
                                      "--radius-per-mass", "0.4,0.3",
                                      "--radius-per-mass", "0.2"})
             .radiiPerMass == std::vector<double>{0.4, 0.3, 0.2}));
@@ -226,9 +231,11 @@ void TestPunctures() {
 
 void TestCatalogueOptions() {
   const PostprocessOptions options = ParsePostprocessArguments({
-    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5", "--puncture", "-0.2,0.1,0:0.25",
-    "--radius-per-mass", "0.4,0.2", "--lmax", "6", "--tolerance", "1e-7"});
-  const AHCommonHorizonSearchOptions catalogue = MakePostprocessCatalogueOptions(options, 0.25);
+    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5",
+    "--puncture", "-0.2,0.1,0:0.25", "--radius-per-mass", "0.4,0.2",
+    "--lmax", "6", "--tolerance", "1e-7"});
+  const AHCommonHorizonSearchOptions catalogue =
+    MakePostprocessCatalogueOptions(options, 0.25);
   assert(catalogue.blackHoles.size() == 2);
   for (std::size_t i = 0; i < 2; ++i) {
     const AHPhysicalBlackHole& blackHole = catalogue.blackHoles[i];
@@ -248,7 +255,8 @@ void TestCatalogueOptions() {
     assert(blackHole.attempts[1].initialRadius == 0.2 * puncture.mass);
   }
   assert(catalogue.lMax == 6);
-  assert(catalogue.interpolation.method == CartesianToSurfaceMethod::RadiusWeightedPolynomial);
+  assert(catalogue.interpolation.method ==
+         CartesianToSurfaceMethod::RadiusWeightedPolynomial);
   assert(catalogue.interpolation.polynomialDegree == 3);
   assert(catalogue.interpolation.supportRadius == 0.25);
   assert(catalogue.solver.tolerance == 1.0e-7);
@@ -273,27 +281,31 @@ void TestCatalogueOptions() {
 // them to 6e-4 and 1e-5. The test runs at lMax 4, not the program's default
 // of 8 with punctures, which takes about ten times longer in a debug build.
 void TestBrillLindquistPunctures() {
-  const BrillLindquist binary{{{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
+  const BrillLindquist binary{
+    {{0.5, {0.25, 0.0, 0.0}}, {0.5, {-0.25, 0.0, 0.0}}}};
   const GridData grid = MakeBrillLindquistGrid(binary, 0.9, 36);
   const PostprocessOptions options = ParsePostprocessArguments({
-    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5", "--puncture", "-0.25,0,0:0.5",
-    "--lmax", "4"});
+    "--input", "a.vtu", "--puncture", "0.25,0,0:0.5",
+    "--puncture", "-0.25,0,0:0.5", "--lmax", "4"});
   const double supportRadius = 3.0 * FinestGridSpacing(grid);
-  const AHHorizonCatalogue catalogue =
-    FindApparentHorizons(grid, MakePostprocessCatalogueOptions(options, supportRadius));
+  const AHHorizonCatalogue catalogue = FindApparentHorizons(
+    grid, MakePostprocessCatalogueOptions(options, supportRadius));
 
   assert(catalogue.individuals.allTargetsFound);
   for (const AHHorizonTargetResult& target : catalogue.individuals.targets) {
     assert(target.successfulAttempt == 0);
-    assert(std::abs(target.horizon->irreducibleMass / 0.749987 - 1.0) < 2.0e-3);
+    assert(std::abs(target.horizon->irreducibleMass / 0.749987 - 1.0) <
+           2.0e-3);
   }
   assert(catalogue.commonHorizons.size() == 1);
   const AHCommonHorizonCatalogueEntry& common = catalogue.commonHorizons[0];
   assert(common.memberIds == (std::vector<std::string>{"bh0", "bh1"}));
   assert(common.reason.triggeredPair);
   assert(common.search.successfulAttempt == 0);
-  assert(common.validation.status == AHCommonHorizonValidationStatus::FullyValidated);
-  assert(std::abs(common.search.horizon->irreducibleMass / 0.998248 - 1.0) < 2.0e-4);
+  assert(common.validation.status ==
+         AHCommonHorizonValidationStatus::FullyValidated);
+  assert(std::abs(common.search.horizon->irreducibleMass / 0.998248 - 1.0) <
+         2.0e-4);
 
   std::cout << "On Brill-Lindquist data, the --puncture defaults find and validate all three "
                "horizons"

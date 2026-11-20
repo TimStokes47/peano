@@ -20,8 +20,8 @@ void PrintAttempts(const std::vector<AHSearchAttemptResult>& attempts) {
   for (std::size_t attempt = 0; attempt < attempts.size(); ++attempt) {
     const AHSearchAttemptResult& result = attempts[attempt];
     std::cout << "Attempt " << attempt << ": initial radius " << result.initialRadius << ", "
-              << (result.result.solver.converged ? "converged" : "failed") << " after "
-              << result.result.solver.iterations << " iterations";
+              << (result.result.solver.converged ? "converged" : "failed")
+              << " after " << result.result.solver.iterations << " iterations";
     if (!result.rejection.empty()) {
       std::cout << ", rejected: " << result.rejection;
     } else if (!result.succeeded && !result.result.solver.message.empty()) {
@@ -65,12 +65,13 @@ int FindOneHorizon(const GridData& grid, const PostprocessOptions& options,
     .summaryFilename = options.outputPrefix + ".txt",
     .surfaceFilename = options.outputPrefix + ".vtp"
   };
-  const AHSearchResult search =
-    WriteAHToFile(grid, MakePostprocessSearchOptions(options, supportRadius), output);
+  const AHSearchResult search = WriteAHToFile(
+    grid, MakePostprocessSearchOptions(options, supportRadius), output);
 
   PrintAttempts(search.attempts);
   if (!search.converged || !search.horizon) {
-    std::cout << "No apparent horizon found. Summary: " << output.summaryFilename << "\n";
+    std::cout << "No apparent horizon found. Summary: "
+              << output.summaryFilename << "\n";
     return HorizonNotFound;
   }
   std::cout << "Apparent horizon found around ";
@@ -88,7 +89,8 @@ int FindOneHorizon(const GridData& grid, const PostprocessOptions& options,
  * for pairs a little beyond the separation where a common horizon exists, and
  * finding nothing there is the expected outcome.
  */
-int FindHorizonsOfPunctures(const GridData& grid, const PostprocessOptions& options,
+int FindHorizonsOfPunctures(const GridData& grid,
+                            const PostprocessOptions& options,
                             double supportRadius) {
   const AHCommonHorizonSearchOptions search =
     MakePostprocessCatalogueOptions(options, supportRadius);
@@ -111,8 +113,8 @@ int FindHorizonsOfPunctures(const GridData& grid, const PostprocessOptions& opti
     std::cout << "Individual horizon of " << target.id << "\n";
     PrintHorizon(*target.horizon);
     if (target.horizon->surfaceAvailable) {
-      std::cout << "  surface: "
-                << AHCatalogueFilename(output, "individual", i, target.id, ".vtp") << "\n";
+      std::cout << "  surface: " << AHCatalogueFilename(
+        output, "individual", i, target.id, ".vtp") << "\n";
     }
   }
 
@@ -137,9 +139,10 @@ int FindHorizonsOfPunctures(const GridData& grid, const PostprocessOptions& opti
       std::cout << "  " << reason << "\n";
     }
     PrintHorizon(*entry.search.horizon);
-    if (entry.validation.status == AHCommonHorizonValidationStatus::FullyValidated) {
-      std::cout << "  surface: "
-                << AHCatalogueFilename(output, "common", i, entry.id, ".vtp") << "\n";
+    if (entry.validation.status ==
+        AHCommonHorizonValidationStatus::FullyValidated) {
+      std::cout << "  surface: " << AHCatalogueFilename(
+        output, "common", i, entry.id, ".vtp") << "\n";
     }
   }
 
