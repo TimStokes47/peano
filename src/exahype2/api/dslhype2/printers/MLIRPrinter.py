@@ -290,25 +290,17 @@ namespace {"::".join(function.namespace)} {{
         
         body_block = Block(arg_types=[builtin.IndexType()])
         body_block.add_op(affine.YieldOp.get())
-        map_identity = AffineMap(1, 0, (AffineDimExpr(0),))
-        lower_bounds_map = builtin.AffineMapAttr(map_identity)
-        upper_bounds_map = builtin.AffineMapAttr(map_identity)
-        lower_bounds_groups = builtin.DenseIntElementsAttr.from_list(builtin.VectorType(builtin.IntegerType(32), [1]), [1])
-        upper_bounds_groups = builtin.DenseIntElementsAttr.from_list(builtin.VectorType(builtin.IntegerType(32), [1]), [1])
-        steps = builtin.ArrayAttr([builtin.IntegerAttr(1, builtin.IntegerType(64))])
 
-        parallel_op = affine.ParallelOp.build(
-            operands=[[lower_bound_ssa_value, upper_bound_ssa_value]],
-            result_types=[[]],
-            regions=[Region(body_block)],
-            properties={
-                "reductions": builtin.ArrayAttr([]),
-                "lowerBoundsMap": lower_bounds_map,
-                "lowerBoundsGroups": lower_bounds_groups,
-                "upperBoundsMap": upper_bounds_map,
-                "upperBoundsGroups": upper_bounds_groups,
-                "steps": steps
-            }
+        identity_map = builtin.AffineMapAttr(AffineMap(1, 0, (AffineDimExpr(0),)))
+        for_op = affine.ForOp.from_region(
+            [lower_bound_ssa_value],
+            [upper_bound_ssa_value],
+            [],
+            [],
+            identity_map,
+            identity_map,
+            Region(body_block),
+            1,
         )
         self.builders.append(Builder(insertion_point=InsertPoint.at_start(body_block)))
 
@@ -322,7 +314,7 @@ namespace {"::".join(function.namespace)} {{
         del self.affine_dimension_map[for_loop.iteration_variable.name]
         self.nested_affine_level = self.nested_affine_level - 1
         self.builders.pop()
-        self.builders[-1].insert(parallel_op)
+        self.builders[-1].insert(for_op)
 
     def print_construction(self, construction: Construction, indent_level: int = 0):
         assert(isinstance(construction.rhs, Integer) or isinstance(construction.rhs, Float))

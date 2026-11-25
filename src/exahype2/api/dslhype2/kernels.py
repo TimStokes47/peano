@@ -1,5 +1,5 @@
 import exahype2.api.dslhype2 as dslhype
-from exahype2.api import Solver, Target, OutputLanguage, MemoryLayout, PDETerm
+from exahype2.api import Solver, Target, OutputLanguage, MemoryLayout, PDETerm, MLIRPass
 import os
 from enum import Enum
 
@@ -283,3 +283,9 @@ extern "C" {
         file = open(os.path.join(kernels_directory, f"{output_file_name}.cpp"), "a")
         file.write(term_definitions)
         file.close()
+
+def construct_mlir_pipeline(target: Target, passes: list[MLIRPass]) -> str:
+    if target != Target.Serial:
+        raise Exception("Only the serial pipeline is supported currently")
+
+    return "xdsl-opt -p 'include-mlir-functions{mlir-file=\"euler_clean.mlir\"}' $< | mlir-opt --pass-pipeline=\"builtin.module(canonicalize,cse,loop-invariant-code-motion,canonicalize,cse,loop-invariant-code-motion,cse,canonicalize,expand-strided-metadata,fold-memref-alias-ops,lower-affine,finalize-memref-to-llvm,loop-invariant-code-motion,canonicalize,cse,finalize-memref-to-llvm,convert-scf-to-cf,convert-openmp-to-llvm,convert-math-to-llvm,convert-func-to-llvm,reconcile-unrealized-casts,canonicalize,cse)\" "

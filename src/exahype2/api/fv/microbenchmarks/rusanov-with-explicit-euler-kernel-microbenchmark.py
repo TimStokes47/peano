@@ -229,17 +229,17 @@ elif args.application == "ccz4":
 thesolver.numerical_scheme = exahype2.api.fv.RusanovWithExplicitEuler(thesolver, args.patch_size)
 solver_variants = []
 if args.cpu == True or args.gpu == False:
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllNested))
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_CellDataFlattened_TemporariesNested))
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_CellDataNested_TemporariesFlattened))
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllFlattened))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllNested, []))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_CellDataFlattened_TemporariesNested, []))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_CellDataNested_TemporariesFlattened, []))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllFlattened, []))
 
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_AllNested))
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_CellDataFlattened_TemporariesNested))
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_CellDataNested_TemporariesFlattened))
-    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_AllFlattened))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_AllNested, []))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_CellDataFlattened_TemporariesNested, []))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_CellDataNested_TemporariesFlattened, []))
+    solver_variants.append((exahype2.api.Target.Serial, True, exahype2.api.OutputLanguage.MLIR, exahype2.api.MemoryLayout.AoS_AllFlattened, []))
 if args.gpu == True:
-    solver_variants.append((exahype2.api.Target.Accelerator, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllFlattened))
+    solver_variants.append((exahype2.api.Target.Accelerator, True, exahype2.api.OutputLanguage.CPP, exahype2.api.MemoryLayout.AoS_AllFlattened, []))
 
 thesolver.numerical_scheme._generator = exahype2.api.fv.RusanovWithExplicitEulerGenerator(thesolver, solver_variants)
 thesolver.grid_construction = exahype2.api.fv.SetupSimulationOverRegularGrid(

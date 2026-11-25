@@ -113,7 +113,7 @@ MLIR_OBJS={{MLIR_OBJS}}
 
 {% for mlir_prefix, pipeline in MLIR_DICT.items() -%}
 {{mlir_prefix}}.ll: {{mlir_prefix}}.mlir
-	{{pipeline}} $< | mlir-translate --mlir-to-llvmir > $@
+	{{pipeline}} | mlir-translate --mlir-to-llvmir > $@
 {% endfor %}
 
 {% for mlir_prefix in MLIR_DICT.keys() -%}

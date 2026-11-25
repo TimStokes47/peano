@@ -1,4 +1,5 @@
 from enum import Enum
+from dataclasses import dataclass
 
 """!
 
@@ -20,3 +21,25 @@ class MemoryLayout(Enum):
     AoS_CellDataFlattened_TemporariesNested = 1
     AoS_CellDataNested_TemporariesFlattened = 2
     AoS_AllFlattened = 3
+
+@dataclass(frozen=True)
+class IncludeMLIRFunctions:
+    input_file: str
+
+@dataclass(frozen=True)
+class InlineFunctions:
+    pass
+
+@dataclass(frozen=True)
+class MoveMemRefAllocationsToStart:
+    pass
+
+MLIRPass = IncludeMLIRFunctions \
+         | InlineFunctions \
+         | MoveMemRefAllocationsToStart
+
+# A configuration specified, in order, the type of target device, whether the kernel should
+# use the stateless variant if possible, the output language, the memory layout, and a list
+# of passes that should be enabled. This final option is ignored if the output language is not
+# MLIR.
+KernelConfiguration = tuple[Target, bool, OutputLanguage, MemoryLayout, list[MLIRPass]]
