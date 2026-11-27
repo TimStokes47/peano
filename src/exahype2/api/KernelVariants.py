@@ -26,17 +26,30 @@ class MemoryLayout(Enum):
 class IncludeMLIRFunctions:
     input_file: str
 
+    def __str__(self):
+        return f"include-mlir-functions{{mlir-file=\"{self.input_file.split(".")[0]}_clean.mlir\" filename-being-modified=\"$<\"}}"
+
 @dataclass(frozen=True)
 class InlineFunctions:
-    pass
+    def __str__(self):
+        return "inline"
 
 @dataclass(frozen=True)
 class MoveMemRefAllocationsToStart:
-    pass
+    def __str__(self):
+        return "move-memref-allocations-to-start"
+
+# This pass is never enabled directly by the user, it exists to facilitate
+# other passes
+@dataclass(frozen=True)
+class LowerAffineToScf:
+    def __str__(self):
+        return "lower-affine"
 
 MLIRPass = IncludeMLIRFunctions \
          | InlineFunctions \
-         | MoveMemRefAllocationsToStart
+         | MoveMemRefAllocationsToStart \
+         | LowerAffineToScf
 
 # A configuration specified, in order, the type of target device, whether the kernel should
 # use the stateless variant if possible, the output language, the memory layout, and a list

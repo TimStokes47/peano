@@ -214,10 +214,10 @@ namespace {"::".join(function.namespace)} {{
 
     def print_array_deallocation(self, array_deallocation: ArrayDeallocation, indent_level: int = 0):
         if array_deallocation.array.array_size == 1 or array_deallocation.array.flatten:
-            return array_deallocation.deallocation.print(self, indent_level)
+            array_deallocation.deallocation.print(self, indent_level)
         else:
-            return f"""{array_deallocation.inner_deallocation.print(self, indent_level)}
-{array_deallocation.outer_deallocation.print(self, indent_level)}"""
+            array_deallocation.inner_deallocation.print(self, indent_level)
+            array_deallocation.outer_deallocation.print(self, indent_level)
         
     def print_memory_allocation(self, memory_allocation: MemoryAllocation, indent_level: int = 0) -> SSAValue:
         type_print = memory_allocation.type.print(self)
@@ -254,17 +254,23 @@ namespace {"::".join(function.namespace)} {{
             self.builders[-1].insert(store_op)
 
         return allocation_op.memref
-        #if isinstance(memory_allocation.lhs, Variable):
-        #    return f"""{self.get_indent(indent_level)}{type_print}* {lhs_print} = new {type_print}[{size_print}];"""
-        #else:
-        #    # lhs is either a variable or a subscript, only variables require a type specifier
-        #    return f"""{self.get_indent(indent_level)}{lhs_print} = new {type_print}[{size_print}];"""
 
     def print_memory_deallocation(self, memory_deallocation: MemoryDeallocation, indent_level: int = 0) -> str:
         lhs_print = memory_deallocation.lhs.print(self)
-        return f"""{self.get_indent(indent_level)}delete[] {lhs_print};"""
+        assert(isinstance(lhs_print, SSAValue))
+        deallocation_op = memref.DeallocOp.get(lhs_print)
+        self.builders[-1].insert(deallocation_op)
     
-    def print_function_call(self, function_call: FunctionCall, indent_level: int = 0):
+    def print_function_call_statement(self, function_call: FunctionCallStatement, indent_level: int = 0):
+        argument_ssa_values: list[SSAValue] = []
+        for argument in function_call.arguments:
+            argument_ssa_values.append(argument.print(self))
+            assert(isinstance(argument_ssa_values[-1], SSAValue))
+
+        xdsl_function_call = func.CallOp(function_call.name.id + ("Stateless" if function_call.stateless else ""), argument_ssa_values, [])
+        self.builders[-1].insert(xdsl_function_call)
+    
+    def print_function_call_expression(self, function_call: FunctionCallStatement, indent_level: int = 0):
         argument_ssa_values: list[SSAValue] = []
         for argument in function_call.arguments:
             argument_ssa_values.append(argument.print(self))
@@ -795,6 +801,10 @@ namespace {"::".join(function.namespace)} {{
         self.builders[-1].insert(load_op)
         return load_op.result
 
+    def print_vector(self, vector: Vector, indent_level: int = 0):
+        value_print = ", ".join([value.print(self) for value in vector.values])
+        return f"""{self.get_indent(indent_level)}tarch::la::Vector<{len(vector.values)}, {vector.base_type.print(self)}>{{{value_print}}}"""
+        
     #################################
     # Type Prints
     #################################
